@@ -1,5 +1,6 @@
 const R = require('superagent')
 const express = require('express')
+const H = require('highland')
 
 const replaceTemplate = (template, key, value) => {
     return template.replace(new RegExp('{' + key + '}', 'gi'), value)
@@ -31,14 +32,15 @@ const setupServer = () => {
   app.use(express.json())
   app.post('/batch', function(req, res) {
     const { body } = req
-    const calls = body.payloads
-      .map((payload) => {
+    const calls = H(body.payloads)
+      .ratelimit(5, 10000)
+      .flatMap((payload) => {
         const url = substitutePayload(body.url, payload)
-        return callHandler(url, body.verb, body.bodyRequest)
+        return H(callHandler(url, body.verb, body.bodyRequest))
       })
-    Promise.all(calls).then((statuses) =>
-      res.json(statuses)
-    )
+      .toArray((statuses) =>{
+        res.json(statuses)
+      })
   });
   return app
 }
