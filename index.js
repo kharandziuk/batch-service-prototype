@@ -48,7 +48,7 @@ module.exports = { setupServer, substitutePayload }
 if (require.main === module) {
   const app = setupServer()
   const server = app.listen(
-    process.env.PORT,
+    3000,
     () => console.log('Example app listening on port 3000!')
   )
 }
